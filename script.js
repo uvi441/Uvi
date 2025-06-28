@@ -1,4 +1,4 @@
-// --- UVI APP - THE ULTIMATE FINAL VERSION ---
+// --- UVI APP - THE BULLETPROOF PLAYER VERSION ---
 
 // --- Step 1: HTML elements ko JavaScript mein pakadna ---
 const searchInput = document.getElementById('search-input');
@@ -15,10 +15,20 @@ const API_KEY = 'AIzaSyClC0bpP1RJkJD4FWFu8JqmillmOUBhegc';
 // --- Step 3: Event Listeners ---
 searchButton.addEventListener('click', () => searchSongs(searchInput.value));
 playPauseButton.addEventListener('click', togglePlayPause);
+
+// Player ke events ko handle karna
 audioPlayer.addEventListener('ended', () => { playPauseButton.textContent = 'Play'; });
 audioPlayer.addEventListener('playing', () => { playPauseButton.textContent = 'Pause'; });
 audioPlayer.addEventListener('pause', () => { playPauseButton.textContent = 'Play'; });
-audioPlayer.addEventListener('loadstart', () => { playerTitle.textContent = "Loading..."; });
+audioPlayer.addEventListener('loadstart', () => { playPauseButton.textContent = '...'; playerTitle.textContent = "Loading..."; });
+audioPlayer.addEventListener('error', () => { playerTitle.textContent = "Error: Failed to load audio."; });
+
+
+// NAYA, ZYADA RELIABLE TAREEKA: JAB BROWSER TAIYAAR HO, TABHI PLAY KARO
+audioPlayer.addEventListener('canplay', () => {
+    audioPlayer.play();
+});
+
 
 // --- Step 4: Search Function ---
 async function searchSongs(query) {
@@ -51,18 +61,17 @@ function displayResults(songs) {
     });
 }
 
-// --- Step 6: Play Song Function (Using a new reliable Proxy) ---
+// --- Step 6: Play Song Function ---
 function playSong(videoId, title, thumbnailUrl) {
     playerTitle.textContent = title;
     playerThumbnail.src = thumbnailUrl;
-    playPauseButton.textContent = '...';
 
-    // This is a reliable public proxy for audio streams
-    audioPlayer.src = `https://yt-stream.koneko.workers.dev/stream/${videoId}`;
-    audioPlayer.play().catch(e => {
-        playerTitle.textContent = "Error playing audio.";
-        console.error("Playback Error:", e);
-    });
+    // Reliable public proxy
+    const audioSource = `https://yt-stream.koneko.workers.dev/stream/${videoId}`;
+    
+    // Sirf source set karo aur browser ko load karne do.
+    audioPlayer.src = audioSource;
+    audioPlayer.load(); // Browser ko bolo ki naya gaana load karna shuru kare
 }
 
 // --- Step 7: Play/Pause Toggle ---
