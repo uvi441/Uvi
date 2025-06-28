@@ -1,4 +1,4 @@
-// --- UVI APP - THE FINAL BULLETPROOF VERSION ---
+// --- UVI APP - THE TANK VERSION (FINAL) ---
 
 // --- Step 1: HTML elements ko JavaScript mein pakadna ---
 const searchInput = document.getElementById('search-input');
@@ -12,10 +12,9 @@ const playPauseButton = document.getElementById('play-pause-button');
 // --- Step 2: API Key ---
 const API_KEY = 'AIzaSyClC0bpP1RJkJD4FWFu8JqmillmOUBhegc'; // Aapki key yahan hai
 
-// --- Step 3: Event Listeners (Buttons aur Player ke) ---
+// --- Step 3: Event Listeners ---
 searchButton.addEventListener('click', () => searchSongs(searchInput.value));
 playPauseButton.addEventListener('click', togglePlayPause);
-
 audioPlayer.addEventListener('ended', () => { playPauseButton.textContent = 'Play'; });
 audioPlayer.addEventListener('playing', () => { playPauseButton.textContent = 'Pause'; });
 audioPlayer.addEventListener('pause', () => { playPauseButton.textContent = 'Play'; });
@@ -54,35 +53,48 @@ function displayResults(songs) {
     });
 }
 
-// --- Step 6: Play Song Function (YAHAN BADLAV KIYA GAYA HAI) ---
+// --- Step 6: Play Song Function (THE "TANK" LOGIC) ---
 async function playSong(videoId, title, thumbnailUrl) {
     playerTitle.textContent = title.replace(/&/g, '&').replace(/"/g, '"');
     playerThumbnail.src = thumbnailUrl;
     
-    try {
-        const response = await fetch(`https://pipedapi.kavin.rocks/streams/${videoId}`);
-        const data = await response.json();
-        
-        // Sabse pehle, check karo ki data mein audioStreams hai bhi ya nahi
-        if (data && data.audioStreams && data.audioStreams.length > 0) {
-            // Ab best quality wali stream dhoondo
-            const audioStream = data.audioStreams.find(s => s.mimeType === "audio/webm") || data.audioStreams[0];
+    // YEH RAHI HUMARI 3 ALAG-ALAG SERVICES KI LIST
+    const audioProxies = [
+        `https://pipedapi.kavin.rocks/streams/${videoId}`,
+        `https://pipedapi.in.projectsegfau.lt/streams/${videoId}`,
+        `https://yt-stream.koneko.workers.dev/stream/${videoId}`
+    ];
+
+    let streamUrl = null;
+
+    // YEH LOOP EK-EK KARKE HAR SERVICE KO TRY KAREGA
+    for (const proxyUrl of audioProxies) {
+        try {
+            console.log(`Trying proxy: ${proxyUrl}`);
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
             
-            // Ab aakhri baar check karo ki stream aur uska URL मौजूद hai ya nahi
-            if (audioStream && audioStream.url) {
-                audioPlayer.src = audioStream.url;
-                audioPlayer.play();
-            } else {
-                // Agar URL nahi mila, toh error dikhao
-                throw new Error("Playable audio stream URL not found.");
+            if (data && data.audioStreams && data.audioStreams.length > 0) {
+                const audioStream = data.audioStreams.find(s => s.mimeType === "audio/webm") || data.audioStreams[0];
+                if (audioStream && audioStream.url) {
+                    streamUrl = audioStream.url;
+                    console.log("Success! Found stream URL.");
+                    break; // Jaise hi URL milega, loop band ho jayega
+                }
             }
-        } else {
-            // Agar audioStreams hi nahi mili, toh error dikhao
-            throw new Error("No audio streams available for this video.");
+        } catch (error) {
+            console.error(`Proxy ${proxyUrl} failed:`, error);
+            // Agar ek service fail hoti hai, toh loop agle par chala jayega
         }
-    } catch (error) {
-        console.error('Error in playSong function:', error);
-        playerTitle.textContent = "Error: Can't play this song.";
+    }
+
+    // AAKHIR MEIN CHECK KARO KI KISI BHI SERVICE SE URL MILA YA NAHI
+    if (streamUrl) {
+        audioPlayer.src = streamUrl;
+        audioPlayer.play();
+    } else {
+        playerTitle.textContent = "Error: Can't play this song. Try another.";
+        console.error("All proxies failed to fetch the audio stream.");
     }
 }
 
