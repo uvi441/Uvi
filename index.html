@@ -4,20 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Uvi</title>
+    
+    <!-- Debug Console ko Chalu Karne ke liye (Yeh Naya Hai) -->
+    <script src="//cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
+    
+    <!-- Humari CSS file ko yahan link kar rahe hain -->
     <link rel="stylesheet" href="style.css">
+
+    <!-- Google se Font laane ke liye -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
+    <!-- App ka Main Container -->
     <div class="app-container">
-        <header class="app-header"><h1>Uvi</h1><div class="search-box"><input type="text" id="search-input" placeholder="Search for a song..."><button id="search-button">Search</button></div></header>
-        <main class="main-content"><div id="results-container"><p class="placeholder-text">Search for your favorite music!</p></div></main>
+
+        <!-- 1. Header Section: Jisme search bar hoga -->
+        <header class="app-header">
+            <h1>Uvi</h1>
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search for a song...">
+                <button id="search-button">Search</button>
+            </div>
+        </header>
+
+        <!-- 2. Main Content: Jaha gaano ki list dikhegi -->
+        <main class="main-content">
+            <div id="results-container">
+                <p class="placeholder-text">Search for your favorite music!</p>
+            </div>
+        </main>
+
+        <!-- 3. Player Section: Jo neeche fix rahega -->
         <footer class="player-container">
-            <div class="song-info"><img id="player-thumbnail" src="https://via.placeholder.com/40" alt="thumbnail"><p id="player-title">Select a song to play</p></div>
-            <div class="player-controls"><audio id="audio-player" controls style="display: none;"></audio><button id="play-pause-button">Play</button></div>
+            <div class="song-info">
+                <img id="player-thumbnail" src="https://via.placeholder.com/40" alt="thumbnail">
+                <p id="player-title">Select a song to play</p>
+            </div>
+            <div class="player-controls">
+                <!-- Audio tag jo gaana play karega, lekin dikhega nahi -->
+                <audio id="audio-player" controls style="display: none;"></audio>
+                
+                <!-- Humara custom play/pause button -->
+                <button id="play-pause-button">Play</button>
+            </div>
         </footer>
+
     </div>
+
+    <!-- Humari JavaScript file ko yahan link kar rahe hain -->
     <script src="script.js"></script>
 </body>
 </html>
