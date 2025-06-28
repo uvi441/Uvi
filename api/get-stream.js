@@ -1,34 +1,35 @@
-// Yeh humara personal secretary (Serverless Function) hai
+// Yeh humara personal secretary hai (Final Version)
 
 export default async function handler(request, response) {
-    // 1. App se videoId lena
     const { videoId } = request.query;
 
     if (!videoId) {
         return response.status(400).json({ error: 'Video ID is required' });
     }
 
+    // Hum ek naye, zyada reliable server ka istemal kar rahe hain
+    const invidiousInstance = "https://vid.puffyan.us";
+
     try {
-        // 2. Parde ke peeche se Invidious service ko call karna
-        const apiResponse = await fetch(`https://invidious.io.projectsegfau.lt/api/v1/videos/${videoId}`);
+        const apiResponse = await fetch(`${invidiousInstance}/api/v1/videos/${videoId}`);
         if (!apiResponse.ok) {
-            throw new Error('Failed to fetch from Invidious API');
+            throw new Error(`Failed to fetch from ${invidiousInstance}`);
         }
         const data = await apiResponse.json();
 
-        // 3. Audio stream ka URL dhoondhna
+        // Sabse aachi quality wali audio stream dhoondho
         const audioStream = data.adaptiveFormats.find(
-            (format) => format.type === "audio/webm"
+            (format) => format.type === "audio/webm" || format.type === "audio/mp4"
         );
 
         if (audioStream && audioStream.url) {
-            // 4. Agar URL mil gaya, toh app ko wapas bhej dena
+            // Kaam ho gaya, app ko stream ka URL bhej do
             response.status(200).json({ streamUrl: audioStream.url });
         } else {
-            throw new Error('Audio stream not found');
+            throw new Error('Audio stream not found in the response');
         }
     } catch (error) {
         console.error('Error in serverless function:', error);
-        response.status(500).json({ error: 'Could not get audio stream.' });
+        response.status(500).json({ error: 'Could not get audio stream. The service might be down.' });
     }
 }
