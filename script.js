@@ -1,1 +1,101 @@
-const searchInput=document.getElementById("search-input"),searchButton=document.getElementById("search-button"),resultsContainer=document.getElementById("results-container"),audioPlayer=document.getElementById("audio-player"),playerThumbnail=document.getElementById("player-thumbnail"),playerTitle=document.getElementById("player-title"),playPauseButton=document.getElementById("play-pause-button");const API_KEY="AIzaSyClC0bpP1RJkJD4FWFu8JqmillmOUBhegc";searchButton.addEventListener("click",()=>{const e=searchInput.value;e&&searchSongs(e)}),async function searchSongs(e){resultsContainer.innerHTML='<p class="placeholder-text">Searching...</p>';const t=`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${e}+lyrics&type=video&videoCategoryId=10&key=${API_KEY}&maxResults=20`;try{const e=await fetch(t),o=await e.json();displayResults(o.items)}catch(e){console.error("Error fetching data:",e),resultsContainer.innerHTML='<p class="placeholder-text">Error! Check API Key or internet.</p>'}}function displayResults(e){resultsContainer.innerHTML="",e&&0!==e.length?e.forEach(e=>{const t=document.createElement("div");t.className="song-item",t.innerHTML=`\n            <img src="${e.snippet.thumbnails.default.url}" alt="thumbnail">\n            <div class="song-item-info">\n                <h4>${e.snippet.title.replace(/&/g,"&").replace(/"/g,'"')}</h4>\n                <p>${e.snippet.channelTitle}</p>\n            </div>\n        `,t.addEventListener("click",()=>{playerTitle.textContent=e.snippet.title.replace(/&/g,"&").replace(/"/g,'"'),playerThumbnail.src=e.snippet.thumbnails.high.url,alert("Playing: "+e.snippet.title+"\n(Audio playback feature coming soon!)")}),resultsContainer.appendChild(t)}):resultsContainer.innerHTML='<p class="placeholder-text">No songs found.</p>'}playPauseButton.addEventListener("click",()=>{audioPlayer.paused?(audioPlayer.play(),playPauseButton.textContent="Pause"):(audioPlayer.pause(),playPauseButton.textContent="Play")});
+// --- UVI APP - FINAL VERSION 1.0 ---
+
+// --- Step 1: HTML elements ko JavaScript mein pakadna ---
+const searchInput = document.getElementById('search-input');
+const searchButton = document.getElementById('search-button');
+const resultsContainer = document.getElementById('results-container');
+const playerContainer = document.querySelector('.player-container');
+const audioPlayer = document.getElementById('audio-player');
+const playerThumbnail = document.getElementById('player-thumbnail');
+const playerTitle = document.getElementById('player-title');
+const playPauseButton = document.getElementById('play-pause-button');
+
+// --- Step 2: API Key ---
+// YAHAN APNI KEY DAALEIN
+const API_KEY = 'AIzaSyClC0bpP1RJkJD4FWFu8JqmillmOUBhegc';
+
+// --- Step 3: Event Listeners ---
+searchButton.addEventListener('click', () => {
+    const searchTerm = searchInput.value;
+    if (searchTerm.trim() !== '') {
+        searchSongs(searchTerm);
+    }
+});
+
+playPauseButton.addEventListener('click', togglePlayPause);
+
+// --- Step 4: Search Function ---
+async function searchSongs(query) {
+    resultsContainer.innerHTML = '<p class="placeholder-text">Searching for songs...</p>';
+    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&key=${API_KEY}&maxResults=20`;
+
+    try {
+        const response = await fetch(searchUrl);
+        const data = await response.json();
+        if (data.error) {
+            throw new Error(data.error.message);
+        }
+        displayResults(data.items);
+    } catch (error) {
+        resultsContainer.innerHTML = `<p class="placeholder-text">Error: ${error.message}. Check API key or restrictions.</p>`;
+        console.error('Search Error:', error);
+    }
+}
+
+// --- Step 5: Display Results Function ---
+function displayResults(songs) {
+    resultsContainer.innerHTML = '';
+    if (!songs || songs.length === 0) {
+        resultsContainer.innerHTML = '<p class="placeholder-text">No results found.</p>';
+        return;
+    }
+    songs.forEach(song => {
+        const songElement = document.createElement('div');
+        songElement.className = 'song-item';
+        songElement.innerHTML = `
+            <img src="${song.snippet.thumbnails.default.url}" alt="thumbnail">
+            <div class="song-item-info">
+                <h4>${song.snippet.title.replace(/&/g, '&').replace(/"/g, '"')}</h4>
+                <p>${song.snippet.channelTitle}</p>
+            </div>
+        `;
+        // Jab gaane par click ho, toh use play karo
+        songElement.addEventListener('click', () => {
+            playSong(song.id.videoId, song.snippet.title, song.snippet.thumbnails.high.url);
+        });
+        resultsContainer.appendChild(songElement);
+    });
+}
+
+// --- Step 6: Play Song Function (with Proxy) ---
+async function playSong(videoId, title, thumbnailUrl) {
+    playerTitle.textContent = "Loading...";
+    playerThumbnail.src = thumbnailUrl;
+    playPauseButton.textContent = '...';
+
+    // Yeh hai humara bichauliya/dost (Proxy Server)
+    const proxyUrl = `https://youtube-audio-stream.onrender.com/audio/${videoId}`;
+
+    try {
+        audioPlayer.src = proxyUrl;
+        audioPlayer.play();
+        playerTitle.textContent = title;
+        playPauseButton.textContent = 'Pause';
+    } catch (error) {
+        playerTitle.textContent = "Failed to load song.";
+        console.error('Playback Error:', error);
+    }
+}
+
+// --- Step 7: Play/Pause Toggle Function ---
+function togglePlayPause() {
+    if (!audioPlayer.src) return; // Agar koi gaana load hi nahi hai toh kuch mat karo
+
+    if (audioPlayer.paused) {
+        audioPlayer.play();
+        playPauseButton.textContent = 'Pause';
+    } else {
+        audioPlayer.pause();
+        playPauseButton.textContent = 'Play';
+    }
+}
