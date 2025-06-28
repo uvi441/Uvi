@@ -44,28 +44,16 @@ function displayResults(songs) {
     });
 }
 
-// Play song function (YAHAN NAYA LOGIC HAI)
-async function playSong(videoId, title, thumbnailUrl) {
-    playerTitle.textContent = "Loading...";
+// Play song function (NEW and FINAL VERSION)
+function playSong(videoId, title, thumbnailUrl) {
+    playerTitle.textContent = title.replace(/&/g, '&');
     playerThumbnail.src = thumbnailUrl;
-    playPauseButton.textContent = '...';
-
-    try {
-        // Apne secretary (/api/get-stream) ko call kar rahe hain
-        const response = await fetch(`/api/get-stream?videoId=${videoId}`);
-        const data = await response.json();
-
-        if (data.streamUrl) {
-            audioPlayer.src = data.streamUrl;
-            audioPlayer.play();
-            playerTitle.textContent = title.replace(/&/g, '&');
-            playPauseButton.textContent = 'Pause';
-        } else {
-            playerTitle.textContent = 'Could not play song.';
-        }
-    } catch (error) {
-        playerTitle.textContent = 'Error. Please try another song.';
-    }
+    playPauseButton.textContent = 'Pause';
+    
+    // Direct stream ka link banana
+    // Yeh humari 100% powerful service ko call karega
+    audioPlayer.src = `/api/get-stream?videoId=${videoId}`;
+    audioPlayer.play();
 }
 
 
@@ -86,4 +74,17 @@ playPauseButton.addEventListener('click', () => {
     }
 });
 
-audioPlayer.addEventListener('ended', () => { playPauseButton.textContent = 'Play'; });
+// Gaana play hone par button ka text badlo
+audioPlayer.addEventListener('playing', () => {
+    playPauseButton.textContent = 'Pause';
+});
+
+// Gaana pause hone par button ka text badlo
+audioPlayer.addEventListener('pause', () => {
+    playPauseButton.textContent = 'Play';
+});
+
+// Gaana khatam hone par button ka text badlo
+audioPlayer.addEventListener('ended', () => {
+    playPauseButton.textContent = 'Play';
+});
