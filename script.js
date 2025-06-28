@@ -1,6 +1,5 @@
-// --- UVI APP - THE TANK VERSION (FINAL) ---
+// --- UVI APP - THE FINAL SERVER-SIDE VERSION ---
 
-// --- Step 1: HTML elements ko JavaScript mein pakadna ---
 const searchInput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
 const resultsContainer = document.getElementById('results-container');
@@ -9,10 +8,8 @@ const playerThumbnail = document.getElementById('player-thumbnail');
 const playerTitle = document.getElementById('player-title');
 const playPauseButton = document.getElementById('play-pause-button');
 
-// --- Step 2: API Key ---
-const API_KEY = 'AIzaSyClC0bpP1RJkJD4FWFu8JqmillmOUBhegc'; // Aapki key yahan hai
+const API_KEY = 'AIzaSyClC0bpP1RJkJD4FWFu8JqmillmOUBhegc';
 
-// --- Step 3: Event Listeners ---
 searchButton.addEventListener('click', () => searchSongs(searchInput.value));
 playPauseButton.addEventListener('click', togglePlayPause);
 audioPlayer.addEventListener('ended', () => { playPauseButton.textContent = 'Play'; });
@@ -21,8 +18,6 @@ audioPlayer.addEventListener('pause', () => { playPauseButton.textContent = 'Pla
 audioPlayer.addEventListener('loadstart', () => { playPauseButton.textContent = '...'; playerTitle.textContent = "Loading..."; });
 audioPlayer.addEventListener('error', () => { playerTitle.textContent = "Error: This audio can't be played."; playPauseButton.textContent = 'Play'; });
 
-
-// --- Step 4: Search Function ---
 async function searchSongs(query) {
     if (!query.trim()) return;
     resultsContainer.innerHTML = '<p class="placeholder-text">Searching...</p>';
@@ -37,7 +32,6 @@ async function searchSongs(query) {
     }
 }
 
-// --- Step 5: Display Results ---
 function displayResults(songs) {
     resultsContainer.innerHTML = '';
     if (!songs || songs.length === 0) {
@@ -53,52 +47,28 @@ function displayResults(songs) {
     });
 }
 
-// --- Step 6: Play Song Function (THE "TANK" LOGIC) ---
+// --- YAHAN BADLAV KIYA GAYA HAI ---
 async function playSong(videoId, title, thumbnailUrl) {
     playerTitle.textContent = title.replace(/&/g, '&').replace(/"/g, '"');
     playerThumbnail.src = thumbnailUrl;
-    
-    // YEH RAHI HUMARI 3 ALAG-ALAG SERVICES KI LIST
-    const audioProxies = [
-        `https://pipedapi.kavin.rocks/streams/${videoId}`,
-        `https://pipedapi.in.projectsegfau.lt/streams/${videoId}`,
-        `https://yt-stream.koneko.workers.dev/stream/${videoId}`
-    ];
 
-    let streamUrl = null;
+    try {
+        // Ab hum bahar nahi, apne hi server par /api/get-stream ko call kar rahe hain
+        const response = await fetch(`/api/get-stream?videoId=${videoId}`);
+        const data = await response.json();
 
-    // YEH LOOP EK-EK KARKE HAR SERVICE KO TRY KAREGA
-    for (const proxyUrl of audioProxies) {
-        try {
-            console.log(`Trying proxy: ${proxyUrl}`);
-            const response = await fetch(proxyUrl);
-            const data = await response.json();
-            
-            if (data && data.audioStreams && data.audioStreams.length > 0) {
-                const audioStream = data.audioStreams.find(s => s.mimeType === "audio/webm") || data.audioStreams[0];
-                if (audioStream && audioStream.url) {
-                    streamUrl = audioStream.url;
-                    console.log("Success! Found stream URL.");
-                    break; // Jaise hi URL milega, loop band ho jayega
-                }
-            }
-        } catch (error) {
-            console.error(`Proxy ${proxyUrl} failed:`, error);
-            // Agar ek service fail hoti hai, toh loop agle par chala jayega
+        if (response.ok && data.streamUrl) {
+            audioPlayer.src = data.streamUrl;
+            audioPlayer.play();
+        } else {
+            throw new Error(data.error || "Failed to get stream URL from server.");
         }
-    }
-
-    // AAKHIR MEIN CHECK KARO KI KISI BHI SERVICE SE URL MILA YA NAHI
-    if (streamUrl) {
-        audioPlayer.src = streamUrl;
-        audioPlayer.play();
-    } else {
-        playerTitle.textContent = "Error: Can't play this song. Try another.";
-        console.error("All proxies failed to fetch the audio stream.");
+    } catch (error) {
+        console.error("Error in playSong:", error);
+        playerTitle.textContent = "Error: Can't play this song.";
     }
 }
 
-// --- Step 7: Play/Pause Toggle Function ---
 function togglePlayPause() {
     if (!audioPlayer.src) return; 
     if (audioPlayer.paused) {
