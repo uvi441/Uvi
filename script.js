@@ -44,15 +44,16 @@ function displayResults(songs) {
     });
 }
 
-// Play song function (NEW and FINAL VERSION)
+// Play song function (FINAL PROFESSIONAL VERSION)
 function playSong(videoId, title, thumbnailUrl) {
-    playerTitle.textContent = title.replace(/&/g, '&');
+    playerTitle.textContent = "Loading..."; // Loading message
     playerThumbnail.src = thumbnailUrl;
-    playPauseButton.textContent = 'Pause';
+    playPauseButton.textContent = '...';
     
-    // Direct stream ka link banana
-    // Yeh humari 100% powerful service ko call karega
-    audioPlayer.src = `/api/get-stream?videoId=${videoId}`;
+    // Render wale naye, powerful server ka address
+    const RENDER_SERVICE_URL = 'https://uvi-5y5q.onrender.com'; 
+
+    audioPlayer.src = `${RENDER_SERVICE_URL}/?videoId=${videoId}`;
     audioPlayer.play();
 }
 
@@ -66,10 +67,8 @@ playPauseButton.addEventListener('click', () => {
     if (audioPlayer.src) {
         if (audioPlayer.paused) {
             audioPlayer.play();
-            playPauseButton.textContent = 'Pause';
         } else {
             audioPlayer.pause();
-            playPauseButton.textContent = 'Play';
         }
     }
 });
@@ -77,6 +76,7 @@ playPauseButton.addEventListener('click', () => {
 // Gaana play hone par button ka text badlo
 audioPlayer.addEventListener('playing', () => {
     playPauseButton.textContent = 'Pause';
+    playerTitle.textContent = playerTitle.textContent.replace("Loading...", ""); // Loading message hatana
 });
 
 // Gaana pause hone par button ka text badlo
@@ -86,5 +86,11 @@ audioPlayer.addEventListener('pause', () => {
 
 // Gaana khatam hone par button ka text badlo
 audioPlayer.addEventListener('ended', () => {
+    playPauseButton.textContent = 'Play';
+});
+
+// Error aane par
+audioPlayer.addEventListener('error', () => {
+    playerTitle.textContent = "Error playing song. Try another one.";
     playPauseButton.textContent = 'Play';
 });
