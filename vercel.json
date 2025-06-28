@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "api/audio.js": {
-      "maxDuration": 30
-    }
-  }
-}
