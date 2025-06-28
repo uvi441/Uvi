@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "play-dl": "^1.9.7"
+    "ytdl-core": "latest"
   }
 }
