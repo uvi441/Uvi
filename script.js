@@ -1,4 +1,4 @@
-// --- UVI APP - THE REAL BULLETPROOF PLAYER VERSION ---
+// --- UVI APP - THE FINAL BULLETPROOF VERSION ---
 
 // --- Step 1: HTML elements ko JavaScript mein pakadna ---
 const searchInput = document.getElementById('search-input');
@@ -59,29 +59,36 @@ async function playSong(videoId, title, thumbnailUrl) {
     playerTitle.textContent = title.replace(/&/g, '&').replace(/"/g, '"');
     playerThumbnail.src = thumbnailUrl;
     
-    // HUM AB EK NAYI, BEHTAR SERVICE ISTEMAL KAR RAHE HAIN
     try {
         const response = await fetch(`https://pipedapi.kavin.rocks/streams/${videoId}`);
         const data = await response.json();
         
-        // Sabse aachi quality wali audio stream dhoondo
-        const audioStream = data.audioStreams.find(s => s.mimeType === "audio/webm") || data.audioStreams[0];
-        
-        if (audioStream && audioStream.url) {
-            audioPlayer.src = audioStream.url;
-            audioPlayer.play();
+        // Sabse pehle, check karo ki data mein audioStreams hai bhi ya nahi
+        if (data && data.audioStreams && data.audioStreams.length > 0) {
+            // Ab best quality wali stream dhoondo
+            const audioStream = data.audioStreams.find(s => s.mimeType === "audio/webm") || data.audioStreams[0];
+            
+            // Ab aakhri baar check karo ki stream aur uska URL मौजूद hai ya nahi
+            if (audioStream && audioStream.url) {
+                audioPlayer.src = audioStream.url;
+                audioPlayer.play();
+            } else {
+                // Agar URL nahi mila, toh error dikhao
+                throw new Error("Playable audio stream URL not found.");
+            }
         } else {
-            throw new Error("No playable audio stream found.");
+            // Agar audioStreams hi nahi mili, toh error dikhao
+            throw new Error("No audio streams available for this video.");
         }
     } catch (error) {
-        console.error('Error playing song:', error);
+        console.error('Error in playSong function:', error);
         playerTitle.textContent = "Error: Can't play this song.";
     }
 }
 
 // --- Step 7: Play/Pause Toggle Function ---
 function togglePlayPause() {
-    if (!audioPlayer.src) return; // Agar koi gaana loaded nahi hai toh kuch mat karo
+    if (!audioPlayer.src) return; 
     if (audioPlayer.paused) {
         audioPlayer.play();
     } else {
