@@ -1,4 +1,4 @@
-// Yeh humara personal secretary hai (Final Version)
+// Yeh humara personal secretary hai (The FINAL version)
 
 export default async function handler(request, response) {
     const { videoId } = request.query;
@@ -7,12 +7,13 @@ export default async function handler(request, response) {
         return response.status(400).json({ error: 'Video ID is required' });
     }
 
-    // Hum ek naye, zyada reliable server ka istemal kar rahe hain
-    const invidiousInstance = "https://vid.puffyan.us";
+    // Humne ek naya, aur bhi reliable server ka address daala hai
+    const invidiousInstance = "https://invidious.slipfox.xyz"; 
 
     try {
         const apiResponse = await fetch(`${invidiousInstance}/api/v1/videos/${videoId}`);
         if (!apiResponse.ok) {
+            // Agar yeh server bhi fail ho, toh error message bhej do
             throw new Error(`Failed to fetch from ${invidiousInstance}`);
         }
         const data = await apiResponse.json();
@@ -29,6 +30,7 @@ export default async function handler(request, response) {
             throw new Error('Audio stream not found in the response');
         }
     } catch (error) {
+        // Koi bhi error ho, yahan pakad lo
         console.error('Error in serverless function:', error);
         response.status(500).json({ error: 'Could not get audio stream. The service might be down.' });
     }
