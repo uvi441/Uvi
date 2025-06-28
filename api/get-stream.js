@@ -1,6 +1,6 @@
-// Yeh file Vercel ke SERVER par chalegi, phone par nahi.
+// Yeh file Vercel ke SERVER par chalegi (CommonJS Version)
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
     // Step 1: Phone se videoId lena
     const { videoId } = req.query;
 
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     for (const proxyUrl of audioProxies) {
         try {
             const response = await fetch(proxyUrl);
-            if (!response.ok) continue; // Agar response theek nahi, agla try karo
+            if (!response.ok) continue;
 
             const data = await response.json();
 
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
                 const audioStream = data.audioStreams.find(s => s.mimeType === "audio/webm") || data.audioStreams[0];
                 if (audioStream && audioStream.url) {
                     streamUrl = audioStream.url;
-                    break; // URL mil gaya, loop band karo
+                    break; 
                 }
             }
         } catch (error) {
@@ -37,9 +37,11 @@ export default async function handler(req, res) {
 
     // Step 3: Phone ko final URL bhejna
     if (streamUrl) {
+        // CORS headers set karna taaki browser block na kare
+        res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Cache-Control', 'no-cache');
         res.status(200).json({ streamUrl: streamUrl });
     } else {
         res.status(500).json({ error: "All proxies failed to fetch the audio stream." });
     }
-}
+};
