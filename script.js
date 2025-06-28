@@ -1,5 +1,6 @@
-// --- UVI APP - FINAL PRO VERSION ---
+// --- UVI APP - THE ULTIMATE FINAL VERSION ---
 
+// --- Step 1: HTML elements ko JavaScript mein pakadna ---
 const searchInput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
 const resultsContainer = document.getElementById('results-container');
@@ -8,19 +9,22 @@ const playerThumbnail = document.getElementById('player-thumbnail');
 const playerTitle = document.getElementById('player-title');
 const playPauseButton = document.getElementById('play-pause-button');
 
+// --- Step 2: API Key ---
 const API_KEY = 'AIzaSyClC0bpP1RJkJD4FWFu8JqmillmOUBhegc';
 
-// Event Listeners
+// --- Step 3: Event Listeners ---
 searchButton.addEventListener('click', () => searchSongs(searchInput.value));
 playPauseButton.addEventListener('click', togglePlayPause);
 audioPlayer.addEventListener('ended', () => { playPauseButton.textContent = 'Play'; });
 audioPlayer.addEventListener('playing', () => { playPauseButton.textContent = 'Pause'; });
 audioPlayer.addEventListener('pause', () => { playPauseButton.textContent = 'Play'; });
+audioPlayer.addEventListener('loadstart', () => { playerTitle.textContent = "Loading..."; });
 
-// Functions
+// --- Step 4: Search Function ---
 async function searchSongs(query) {
+    if (!query.trim()) return;
     resultsContainer.innerHTML = '<p class="placeholder-text">Searching...</p>';
-    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&key=${API_KEY}&maxResults=20`;
+    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&key=${API_KEY}&maxResults=25`;
     try {
         const response = await fetch(searchUrl);
         const data = await response.json();
@@ -31,6 +35,7 @@ async function searchSongs(query) {
     }
 }
 
+// --- Step 5: Display Results ---
 function displayResults(songs) {
     resultsContainer.innerHTML = '';
     if (!songs || songs.length === 0) {
@@ -46,19 +51,21 @@ function displayResults(songs) {
     });
 }
 
+// --- Step 6: Play Song Function (Using a new reliable Proxy) ---
 function playSong(videoId, title, thumbnailUrl) {
-    playerTitle.textContent = "Loading...";
+    playerTitle.textContent = title;
     playerThumbnail.src = thumbnailUrl;
     playPauseButton.textContent = '...';
 
-    // Humare apne private server se audio laao
-    audioPlayer.src = `/api/audio?videoId=${videoId}`;
+    // This is a reliable public proxy for audio streams
+    audioPlayer.src = `https://yt-stream.koneko.workers.dev/stream/${videoId}`;
     audioPlayer.play().catch(e => {
         playerTitle.textContent = "Error playing audio.";
         console.error("Playback Error:", e);
     });
 }
 
+// --- Step 7: Play/Pause Toggle ---
 function togglePlayPause() {
     if (!audioPlayer.src) return;
     if (audioPlayer.paused) {
