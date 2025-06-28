@@ -1,4 +1,4 @@
-// --- UVI APP - FINAL VERSION 1.0 ---
+// --- UVI APP - FINAL VERSION 1.1 ---
 
 // --- Step 1: HTML elements ko JavaScript mein pakadna ---
 const searchInput = document.getElementById('search-input');
@@ -23,6 +23,7 @@ searchButton.addEventListener('click', () => {
 });
 
 playPauseButton.addEventListener('click', togglePlayPause);
+audioPlayer.addEventListener('ended', () => { playPauseButton.textContent = 'Play'; }); // Gaana khatam hone par button theek karna
 
 // --- Step 4: Search Function ---
 async function searchSongs(query) {
@@ -32,13 +33,10 @@ async function searchSongs(query) {
     try {
         const response = await fetch(searchUrl);
         const data = await response.json();
-        if (data.error) {
-            throw new Error(data.error.message);
-        }
+        if (data.error) { throw new Error(data.error.message); }
         displayResults(data.items);
     } catch (error) {
-        resultsContainer.innerHTML = `<p class="placeholder-text">Error: ${error.message}. Check API key or restrictions.</p>`;
-        console.error('Search Error:', error);
+        resultsContainer.innerHTML = `<p class="placeholder-text">Error: ${error.message}.</p>`;
     }
 }
 
@@ -59,7 +57,6 @@ function displayResults(songs) {
                 <p>${song.snippet.channelTitle}</p>
             </div>
         `;
-        // Jab gaane par click ho, toh use play karo
         songElement.addEventListener('click', () => {
             playSong(song.id.videoId, song.snippet.title, song.snippet.thumbnails.high.url);
         });
@@ -67,14 +64,14 @@ function displayResults(songs) {
     });
 }
 
-// --- Step 6: Play Song Function (with Proxy) ---
+// --- Step 6: Play Song Function (with a NEW, better Proxy) ---
 async function playSong(videoId, title, thumbnailUrl) {
     playerTitle.textContent = "Loading...";
     playerThumbnail.src = thumbnailUrl;
     playPauseButton.textContent = '...';
 
-    // Yeh hai humara bichauliya/dost (Proxy Server)
-    const proxyUrl = `https://youtube-audio-stream.onrender.com/audio/${videoId}`;
+    // *** YEH HAI NAYA, POWERFUL PROXY SERVER ***
+    const proxyUrl = `https://yt-stream.vopp.top/audio/${videoId}`;
 
     try {
         audioPlayer.src = proxyUrl;
@@ -83,13 +80,12 @@ async function playSong(videoId, title, thumbnailUrl) {
         playPauseButton.textContent = 'Pause';
     } catch (error) {
         playerTitle.textContent = "Failed to load song.";
-        console.error('Playback Error:', error);
     }
 }
 
 // --- Step 7: Play/Pause Toggle Function ---
 function togglePlayPause() {
-    if (!audioPlayer.src) return; // Agar koi gaana load hi nahi hai toh kuch mat karo
+    if (!audioPlayer.src) return;
 
     if (audioPlayer.paused) {
         audioPlayer.play();
