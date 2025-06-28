@@ -1,33 +1,30 @@
-// Yeh humari apni khud ki service hai
-import ytdl from 'ytdl-core';
+// Yeh humari 100% powerful service hai (Streaming Version)
+import play from 'play-dl';
 
 export default async function handler(request, response) {
-    const { videoId } = request.query;
-
-    if (!videoId) {
-        return response.status(400).json({ error: 'Video ID is required' });
-    }
-
     try {
-        const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-        
-        // ytdl-core tool ka istemal karke video ki info nikalna
-        const info = await ytdl.getInfo(youtubeUrl);
-        
-        // Sirf audio wale formats ko filter karna
-        const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
-        
-        // Sabse aachi quality wali audio lena
-        const bestAudio = audioFormats.sort((a, b) => b.bitrate - a.bitrate)[0];
+        const { videoId } = request.query;
 
-        if (bestAudio && bestAudio.url) {
-            // Kaam ho gaya, app ko audio ka link bhej do
-            response.status(200).json({ streamUrl: bestAudio.url });
-        } else {
-            throw new Error('No audio formats found for this video.');
+        if (!videoId) {
+            return response.status(400).send('Video ID is required');
         }
+
+        // play-dl tool se video ki stream banana
+        const stream = await play.stream(videoId, {
+            quality: 1, // 0: low, 1: medium, 2: high
+            discordPlayerCompatibility: true // Compatibility badhane ke liye
+        });
+
+        // Browser ko batana ki audio aa raha hai
+        response.setHeader('Content-Type', stream.type);
+        response.setHeader('Cache-Control', 'no-cache');
+
+        // Pipe se stream ko direct browser mein bhejna
+        stream.stream.pipe(response);
+
     } catch (error) {
-        console.error('YTDL-CORE aError:', error);
-        response.status(500).json({ error: 'Failed to get audio stream using ytdl-core.' });
+        console.error('STREAMING SERVICE ERROR:', error);
+        // Agar koi bhi error aaye, toh browser ko batao
+        response.status(500).send('Failed to stream audio.');
     }
 }
