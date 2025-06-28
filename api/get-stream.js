@@ -1,47 +1,28 @@
-// Yeh file Vercel ke SERVER par chalegi (CommonJS Version)
+// --- SERVER WITH ITS OWN ENGINE (play-dl) ---
+
+// Step 1: Engine ko import karna
+const play = require('play-dl');
 
 module.exports = async (req, res) => {
-    // Step 1: Phone se videoId lena
+    // Step 2: Phone se videoId lena
     const { videoId } = req.query;
 
     if (!videoId) {
         return res.status(400).json({ error: 'videoId is required' });
     }
 
-    // Step 2: Wahi "Tank" wali logic server par chalana
-    const audioProxies = [
-        `https://pipedapi.kavin.rocks/streams/${videoId}`,
-        `https://pipedapi.in.projectsegfau.lt/streams/${videoId}`
-    ];
+    try {
+        // Step 3: Engine se direct stream maangna
+        let stream = await play.stream(videoId, {
+            discordPlayerCompatibility: true // Yeh behtar compatibility deta hai
+        });
 
-    let streamUrl = null;
+        // Step 4: Browser ko stream bhejna
+        res.setHeader('Content-Type', stream.type);
+        stream.stream.pipe(res);
 
-    for (const proxyUrl of audioProxies) {
-        try {
-            const response = await fetch(proxyUrl);
-            if (!response.ok) continue;
-
-            const data = await response.json();
-
-            if (data && data.audioStreams && data.audioStreams.length > 0) {
-                const audioStream = data.audioStreams.find(s => s.mimeType === "audio/webm") || data.audioStreams[0];
-                if (audioStream && audioStream.url) {
-                    streamUrl = audioStream.url;
-                    break; 
-                }
-            }
-        } catch (error) {
-            // Ek service fail hui, aage badho
-        }
-    }
-
-    // Step 3: Phone ko final URL bhejna
-    if (streamUrl) {
-        // CORS headers set karna taaki browser block na kare
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.status(200).json({ streamUrl: streamUrl });
-    } else {
-        res.status(500).json({ error: "All proxies failed to fetch the audio stream." });
+    } catch (error) {
+        console.error("play-dl error:", error);
+        res.status(500).json({ error: "Failed to process the audio stream." });
     }
 };
